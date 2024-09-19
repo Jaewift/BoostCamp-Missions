@@ -147,6 +147,7 @@ print(solution("002-123456789012"))
 print(solution("001-1234567"))
 ```
 <br>
+<br>
 
 # Mission2
 
@@ -223,6 +224,7 @@ return ownershipCount
 4 4 4 4
 ["C": 4, "D": 3, "B": 4, "A": 4]
 ```
+<br>
 <br>
 
 # Mission3
@@ -317,6 +319,7 @@ Prince*(RPG) 4.8, Brave*(RPG) 4.2
 Football(Sports) 2.9
   
 ```
+<br>
 <br>
 
 # Mission4
@@ -469,6 +472,7 @@ print(display())
 |---|\-\|---|/-/|
 |   |---|/-/|/-/|
 ```
+<br>
 <br>
 
 # 💡BasicTeamMission💡
@@ -913,6 +917,7 @@ System이 가지고 있는 타입도 아니고, 커스텀 한 타입도 아닐 �
 임형주(WEB)| 문제를 해결하는 것보다 문제를 올바르게 정의하는게 정말 중요하다고 느꼈습니다. <br>팀원들과 소통을 하면서 어떤 문제를 해결해야 할지 더 명확해졌고 <br>문제 정의를 하다보니 어떻게 해결할지 방법에 대한 단서도 얻을 수 있었던 것 같습니다.|
 윤상진(WEB)| 처음에는 문제를 이해하는 것조차 어려웠습니다. <br>하지만 팀원들과 조금씩 의견을 나누다 보니 점점 무엇을 해야 할지 명확해졌고, 문제를 해결할 수 있었습니다. <br>제한된 시간 안에 익숙하지 않은 언어를 분석하고 활용해야 했던 점이 쉽지 않았지만, 그 과정에서 많이 성장할 수 있었습니다. <br>무엇보다 팀원들과 함께 어려운 문제를 해결하기 위해 소통했던 것이 정말 재미있었습니다.|
 <br>
+<br>
 
 # Mission6
 
@@ -1101,3 +1106,434 @@ ERROR, OVERFLOW, UNKNOWN
 ### PUSH 명령을 9개 수행하면서 9번째 명령은 실패해서 OVERFLOW를 출력합니다.
 ### 마지막 PUSH3 명령은 수행하지 못하기 때문에 UNKNOWN을 출력합니다.
 <br>
+<br>
+
+# Mission7
+
+# 화성 달력 만들기 📆
+<br>
+
+# - 기능요구사항
+### 1. 실제 화성 년월일 계산 단위는 다음과 같습니다.
+#### - 1 화성년 = 686.98 지구일 = 668.5907 화성일
+#### - 1 화성일 : 1 솔(sol) = 24.65979 지구시간 (지구 하루와 화성 하루가 같다고 가정합니다.
+<br>
+
+## 화성 달력 기준
+### 1. 1화성년을 668화성일로 정하고, 2년마다 669화성일로 정합니다.
+### 2. 1주일(화성주일)을 7화성일로 정합니다.
+### 3. 1화성월을 28화성일(=4주일)로 정합니다.
+### 4. 1화성년 달력을 24화성월로 정합니다.
+#### - 단, 24×28=672이라서 668보다, 6화성월마다 하루씩, 총 4일을 빼서 672-4=668로 맞춥니다.
+#### - 윤년의 경우 마지막 한 달에서 하루를 빼지 않고 669일로 맞춥니다.
+### 5. 6화성월마다 하루 빠진 마지막 요일은 다음달에 당겨서 계산하지 않고, 모든 화성월은 솔 솔리스부터 시작합니다.
+<br>
+
+## 화성 요일
+### - 지구 요일과 동일한 기준으로 일월화수목금토 7개 요일에 이름을 붙입니다.
+#### 1 ~ 5월, 7 ~ 11월, 13 ~ 17월, 19 ~ 23월
+<img width="488" alt="Screenshot 2024-07-03 at 8 20 55 PM" src="https://gist.github.com/assets/106376249/e82a0cc9-90e9-452a-9855-1340a39ee216">
+
+#### 6월, 12월, 18월, 24월
+<img width="522" alt="Screenshot 2024-07-03 at 8 21 18 PM" src="https://gist.github.com/assets/106376249/828c9f7c-4e71-4724-afb5-9d75f837c51a">
+
+<br>
+<br>
+<br>
+
+# - 프로그래밍 요구사항
+### 1. 지구에서 사용하는 그레고리안 달력을 기준으로 특정 날짜를 입력하면 그 날짜에 해당하는 화성일을 포함하는 화성월을 표시하는 프로그램을 작성해야 합니다.
+### 2. 계산 편의상 지구 달력 그레고리력은 1년 1월 1일부터 시작이고, 1년은 365일이며 4년마다 2월말에 29일을 붙여서 366일로 계산합니다.
+<br>
+
+## 지구 날짜 계산 함수
+```swift
+private func get_EarthDay(_ arr: [String]) -> Int {
+  let days = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] // 각 달의 일수를 담고 있는 배열
+  var day: Int = 0
+    
+  // 먼저 연도를 기준으로 총 일수를 계산하고 윤년을 고려하여 추가적인 일수를 더하기
+  day = (Int(arr[0])! - 1) * 365 + Int((Double(Int(arr[0])! - 1) / 4.0).rounded(.down))
+    
+  // 월별 일수를 더하기
+  for i in 0..<(Int(arr[1])! - 1) {
+    if i == 1 && Int(arr[0])! % 4 == 0 {
+      day += 1 // 만약 2월이고 해당 연도가 윤년이라면 하루를 더 추가
+    } else {
+      day += days[i]
+    }
+  }
+  day += Int(arr[2])! // 일(day)을 더하기
+  return day
+}
+```
+<br>
+
+## 화성 날짜 계산 함수
+```swift
+private func get_MarsDay(_ earthDay: Int) {
+  var year = earthDay / 668 // 화성 연도를 계산
+  year -= 1
+  var leapDay = earthDay - ((year + 1) / 2) // 윤년 일수를 조정
+  var day = leapDay - year * 668 // 남은 일수
+    
+  // 남은 일수를 계산하여 월과 일을 계산
+  var marsMonth = day / 28
+  var marsDay = day - marsMonth * 28
+  marsDay -= 1
+  make_MarsCal(year, marsMonth + 1)
+
+  var str = "\n지구날은  \(earthDay) => \(year) 화성년 \(marsMonth + 1)월 \(marsDay)일\n\n"
+  str += "     \(year)년  \(marsMonth + 1)월\n"
+  str += "Su Lu Ma Me Jo Ve Sa"
+    
+  for i in 0..<marsCal.count {
+    if i % 7 == 0 {
+      str += "\n"
+    }
+    if i < 9 {
+      str += " \(marsCal[i]) "
+    } else {
+      str += "\(marsCal[i]) "
+    }
+  }
+  print(str)
+}
+```
+<br>
+
+## 화성 달력 만들기 함수
+```swift
+private func make_MarsCal(_ year: Int, _ month: Int) {
+  for i in 1...28 {
+    if month % 6 == 0 {
+      if (year % 2 == 0) && (month == 24 ) {
+        marsCal.append("(윤년)\(i)") // 해당 월이 윤년 월이라면 "(윤년)"을 추가
+      }
+    } else {
+      marsCal.append(i)
+    }
+  }
+}
+```
+<br>
+
+## 5초 대기 표시
+### 지구 날짜를 입력받고 나면, 5초 동안 진행 현황을 콘솔 화면에 업데이트하는 Progress Bar를 직접 구현해서 표시해야 합니다. 적어도 10% 마다 업데이트해서 100%까지 진행 상황을 보여줘야 합니다.
+```swift
+예시1
+▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░ 50%
+예시2
+██████████▁▁▁▁▁▁▁▁▁▁ 50%
+예시3
+⚫⚫⚫⚫⚫⚪⚪⚪⚪⚪ 50%
+```
+```swift
+private func bar() {
+  let totalSteps = 10 // 총 진행 단계를 설정
+    
+  for i in 1...totalSteps {
+    let progress = Double(i) / Double(totalSteps)
+    // 진행 상황을 표시하는 프로그레스 바를 출력
+    let progressBar = String(repeating: "▓", count: i) + String(repeating: "░", count: totalSteps - i)
+    print("\r\(progressBar) 화성까지 여행 \(Int(progress * 100))%", terminator: "")
+    fflush(stdout)
+    Thread.sleep(forTimeInterval: 0.5) // 각 단계마다 잠시 멈춤
+  }
+}
+```
+<br>
+
+# - 입력 및 출력
+```swift
+func main() {
+    print("지구날짜는? ", terminator: "")
+    // "YYYY-MM-DD" 형식의 날짜 문자열을 분할한 배열
+    let arr = readLine()!.split(separator: "-").map { String($0) }
+    bar()
+    let earthDay = get_EarthDay(arr)
+    get_MarsDay(earthDay)
+}
+```
+```swift
+지구날짜는? 2024-01-01
+▓▓▓▓▓▓▓▓▓▓ 화성까지 여행 100%
+지구날은  738901 => 1105 화성년 8월 11일
+
+     1105년  8월
+Su Lu Ma Me Jo Ve Sa
+ 1  2  3  4  5  6  7 
+ 8  9 10 11 12 13 14 
+15 16 17 18 19 20 21 
+22 23 24 25 26 27 28 
+```
+<br>
+<br>
+
+# Mission8
+# 로그 파일 분석하기 📁
+<br>
+
+# - 기능요구사항
+## 프로그램에서 시스템 로그 파일을 열어서 데이터별로 분류하여 데이터 구조로 구현해야 한다.
+<br>
+
+### 1. 로그는 문자열 한 줄마다 하나의 데이터로 구분한다. 한 줄의 마지막은 줄바꿈(\n) 문자를 포함한다.
+### 2. 로그는 다음과 같은 요소를 포함하면 각 요소는 탭문자(\t)로 구분한다.
+* 로그 레벨
+  * default, Info, error 등
+  * 고정된 값이 아니라 새로운 항목이 추가될 수 있다.
+* 기록 시각
+  * 14:22:30.579612+0900 시간 형식
+* 프로세스
+  * WindowServer, kernel, mDNSResponder 등 문자열
+* 기록
+  * 나머지 문자열
+
+### 파일을 불러서 읽는 함수 parseLogFile()
+```swift
+// 파일을 읽는 함수
+func parseLogFile(filePath: String) -> [LogData]? {
+    do {
+        // 파일 내용을 저장
+        let Contents = try String(contentsOfFile: filePath, encoding: .utf8)
+        var logDatas = [LogData]()
+        
+        // 한줄씩 줄바꿈으로 구분하여 저장
+        let lines = Contents.split(separator: "\n")
+        for line in lines {
+            // 요소를 탭문자로 구분하여 저장
+            let components = line.split(separator: "\t")
+            if components.count >= 4 {
+                let logLevel = String(components[0])
+                let timeStamp = String(components[1])
+                let process = String(components[2])
+                // 나머지 문자열 저장
+                let message = components[3...].joined(separator: "\t")
+                let data = LogData(logLevel: logLevel, timeStamp: timeStamp, process: process, message: message)
+                logDatas.append(data) // 데이터들을 배열로 저장
+            }
+        }
+        
+        return logDatas
+    } catch {
+        print("파일을 읽는 중 오류 발생: \(error)")
+        return nil
+    }
+}
+```
+<br>
+
+# - 프로그래밍 요구사항
+## 로그 파일을 분석한 데이터를 바탕으로 다음과 같은 기능을 구현할 수 있는 만큼 구현하세요. 대신 각각 다른 함수로 구현하세요.
+<br>
+
+### 1. 각 로그 데이터 값을 포함할 객체 또는 타입을 선언해야 합니다.
+```swift
+struct LogData {
+    var logLevel: String
+    var timestamp: String
+    var process: String
+    var message: String
+}
+```
+<br>
+
+### 2. 로그 레벨 유형별로 필터링할 수 있어야 합니다.
+```swift
+// 로그 레벨 유형별로 필터링하는 함수
+func filterByLogLevel(datas: [LogData]) -> [String: [LogData]] {
+    var filteredDatas = [String: [LogData]]()
+    for data in datas {
+        filteredDatas[data.logLevel, default: []].append(data)
+    }
+    return filteredDatas
+}
+```
+<br>
+
+### 3. 로그 시각으로 정렬할 수 있어야 합니다.
+```swift
+// 로그 시각으로 정렬하는 함수
+func sortByTimestamp(datas: [LogData]) -> [LogData] {
+    return datas.sorted { $0.timeStamp < $1.timeStamp }
+}
+```
+<br>
+
+### 4. 프로세스 이름으로 필터링할 수 있어야 합니다.
+```swift
+// 프로세스 이름별로 필터링하는 함수
+func filterByProcess(datas: [LogData]) -> [String: [LogData]] {
+    var filteredEntries = [String: [LogData]]()
+    for data in datas {
+        filteredEntries[data.process, default: []].append(data)
+    }
+    return filteredEntries
+}
+```
+<br>
+
+### 5. 프로세스 이름으로 정렬할 수 있어야 합니다.
+```swift
+// 프로세스 이름으로 정렬하는 함수
+func sortByProcess(datas: [LogData]) -> [LogData] {
+    return datas.sorted { $0.process < $1.process }
+}
+```
+<br>
+
+### 6. 로그레벨, 프로세스 별로 카운트값을 가져올 수 있어야 합니다.
+```swift
+// 로그 레벨 유형별로 카운트 하는 함수
+func countByLogLevel(datas: [LogData]) -> [String: Int] {
+    var count = [String: Int]()
+    for data in datas {
+        count[data.logLevel, default: 0] += 1
+    }
+    return count
+}
+
+// 프로세스 이름별로 카운트 하는 함수
+func countByProcess(datas: [LogData]) -> [String: Int] {
+    var count = [String: Int]()
+    for data in datas {
+        count[data.process, default: 0] += 1
+    }
+    return count
+}
+```
+<br>
+
+# - 입력 및 출력
+```swift
+if let logDatas = parseLogFile(filePath: "/Users/jaegupark/Downloads/1701410305471system.log") {
+    
+    let logLevelFiltered = filterByLogLevel(datas: logDatas)
+    print("로그 레벨별 필터링된 항목:")
+    for (level, datas) in logLevelFiltered {
+        print("\(level): \(datas)")
+    }
+    
+    let sortedByTimestamp = sortByTimestamp(datas: logDatas)
+    print("로그 시각 기준 정렬: \(sortedByTimestamp)")
+    
+    let processFiltered = filterByProcess(datas: logDatas)
+    print("프로세스 이름별 필터링된 항목:")
+    for (process, datas) in processFiltered {
+        print("\(process): \(datas)")
+    }
+    
+    let sortedByProcess = sortByProcess(datas: logDatas)
+    print("프로세스 이름 기준 정렬: \(sortedByProcess)")
+    
+    let logLevelCounts = countByLogLevel(datas: logDatas)
+    print("로그 레벨별 항목 수: \(logLevelCounts)")
+    
+    let processCounts = countByProcess(datas: logDatas)
+    print("프로세스별 항목 수: \(processCounts)")
+} else {
+    print("로그 파일을 분석하지 못했습니다.")
+}
+```
+```swift
+출력 데이터가 너무 방대하여 출력값 생략 
+```
+<br>
+<br>
+
+# 네이버 부스트캠프 베이직 그룹 미션 2
+
+### 가까운 도시 찾기 접근 방법
+
+1. City, Cluster 데이터 구조 설계하기
+
+    해당 미션을 해결하기 위해 어떤 데이터 구조가 필요한지 의논을 했습니다. <br>
+    제공해주신 데이터 세트를 통해 도시 데이터를 구조화 시킨 `City` 구조체를 만들었고 임시 중심점이나 새로 구해진 중심점의 데이터를 인덱스로 관리하기 보다 구조화 시키는 것이 더욱 효율적이라 판단하여 `Cluster` 라는 구조체를 만들었습니다. 
+    
+    ``` swift
+    struct City {
+      var name: String
+      var year: Int
+      var latitude: Double
+      var longitude: Double
+      var population: Int
+    }
+    
+    struct Cluster {
+      var cities: [City]
+      var centroid: (Double, Double)
+    }
+    ```
+   
+    - `centroid` : 중심점의 x, y 좌표를 갖고 있습니다.
+    - `citiyes` : 해당 중심점으로부터 가까운 도시의 데이터를 갖고 있으며 요구하는 그룹화에 대한 데이터를 의미합니다. 결과적으로 k 개 지점 사이의 거리를 구해서 가까운 Cluster 에 도시를 할당하게 됩니다. 
+
+<br>
+
+2. 필요한 함수 설계하기
+
+    데이터 구조를 설계하고 나서 필요한 함수가 무엇이 있는지 의논을 하였습니다. <br>
+    - 중심점과 각 도시의 좌표를 통해 거리를 구하는 함수
+    - 그룹화 된 도시들의 좌표를 통해 중심점을 다시 구하는 함수
+    - kmeans_pop, kmesas_long 함수 구현하기
+
+    다음과 같이 4개의 메서드를 구현하고자 하였고 각자 함수를 작성하고 합칠 때 다시 수정이 필요없도록 미연에 방지하고자 매개변수와 어떤 값을 반환하는지까지 논의하였습니다.
+
+<br>
+
+3. 각 함수 설명
+
+- `kmeans_pop()`
+    1. 주어진 도시 데이터를 기반으로 K개의 초기 클러스터를 생성합니다. 각 클러스터의 초기 중심점은 무작위로 선택된 도시의 year와 population 값입니다.
+    2. 각 도시를 가장 가까운 클러스터에 할당합니다.
+    3. 각 클러스터의 새로운 중심점을 계산합니다.
+    4. 중심점이 더 이상 변화하지 않을 때까지 2번과 3번 과정을 반복합니다.
+    5. 최종 결과 클러스터들을 반환합니다.
+
+<br>
+
+- `calculateCenterpoint()`
+    
+    중심점으로 부터 가까운 도시 그룹의 데이터는 `Cluster` 구조체에 저장되어있습니다. <br>
+    해당 `Cluster` 를 매개변수로 할당받아 도시들의 x,y 좌표를 가지고 중심점을 다시 계산하는 로직을 포함하고 있습니다 <br>
+    인구수와 경도에 따라 y 축이 변하기 때문에 다음과 같이 `KmeansType` 이라는 enum 을 만들어 Y 축을 계산하는 로직을 구분하였습니다.
+    
+    <br>
+    
+- `addCityToClosestClusterbyPop()`, `addCityToClosestClusterByLon()`
+
+    유클리드 거리 <br>
+    도시 좌표와 중심점 좌표 사이의 거리를 구할 때 유클리드 거리 공식을 사용함. 
+
+    Hashable <br>
+        Cluster 구조체를 딕셔너리의 키로 사용하기 위해서 hashable을 채택해야했다. hashable은 고유한 해시 값을 가지며 이를 기반으로 빠르게 데이터를 저장하고 검색할 수 있다는 것을 의미하며, Swift에서 딕셔너리의 키는 해시 가능해야한다.
+
+    Equatable <br>
+        두 개의 Cluster 구조체 객체를 비교하기 위해서 구조체에 Equatable을 채택했다.
+        
+<br>
+
+4. 데이터 구조, 함수 실행 순서 손그림
+
+<br>
+
+![Untitled (Draft)-2](https://gist.github.com/assets/45564605/30c44abc-c5d8-450f-947e-095d310e17d5)
+
+
+# - 입력 및 출력
+```swift
+그룹#1 중심값: (1978.2564102564102, 790329.5128205129)
+그룹#1 도시들: ["부산", "인천", "대구", "대전", "광주", "울산", "세종", "수원", "창원", "포항", "전주", "청주", "제주", "고양", "용인", "천안", "김해", "평택", "마산", "군산", "원주", "의정부", "김포", "광명", "춘천", "안산", "성남", "구미", "시흥", "목포", "익산", "경주", "의왕", "부천", "남양주", "파주", "거제", "화성", "강릉"]
+그룹#2 중심값: (1946.0, 9720846.0)
+그룹#2 도시들: ["서울"]
+
+그룹#1 중심값: (1950.0833333333333, 127.52773333333333)
+그룹#1 도시들: ["서울", "수원", "포항", "전주", "청주", "제주", "마산", "군산", "원주", "목포", "익산", "경주"]
+그룹#2 중심값: (1984.111111111111, 127.43065555555556)
+그룹#2 도시들: ["인천", "대구", "광주", "평택", "광명", "구미", "시흥", "의왕", "거제"]
+그룹#3 중심값: (1997.8666666666666, 127.58782000000001)
+그룹#3 도시들: ["대전", "울산", "세종", "창원", "고양", "용인", "천안", "김해", "김포", "춘천", "안산", "남양주", "파주", "화성", "강릉"]
+그룹#4 중심값: (1968.0, 127.507675)
+그룹#4 도시들: ["부산", "의정부", "성남", "부천"]
+```
